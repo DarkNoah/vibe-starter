@@ -21,8 +21,6 @@ import {
   IconSparkles,
   IconBrandOpenai,
 } from "@tabler/icons-react";
-
-import { NavDocuments } from "@/app/dashboard/nav-documents";
 import { NavMain } from "@/app/(pages)/nav-main";
 import { NavSecondary } from "@/app/dashboard/nav-secondary";
 import { NavUser } from "@/components/nav-user";
@@ -38,6 +36,7 @@ import {
 import { ChatMaxingIconColoured } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { InviteFriend } from "@/components/invites/invite-friend";
 
 const data = {
   navMain: [
@@ -55,7 +54,7 @@ const data = {
   navSecondary: [
     {
       title: "Settings",
-      url: "#",
+      url: "/settings",
       icon: IconSettings,
     },
     {
@@ -67,23 +66,6 @@ const data = {
       title: "Search",
       url: "#",
       icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
     },
   ],
 };
@@ -114,8 +96,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <InviteFriend></InviteFriend>
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

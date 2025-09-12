@@ -1,9 +1,9 @@
-import { AppSidebar } from "@/app/dashboard/app-sidebar";
 import { SiteHeader } from "@/app/dashboard/site-header";
 import { LoadingBar } from "@/app/dashboard/loading-bar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "./app-sidebar";
 
-export default async function DashboardLayout({
+export default async function PagesLayout({
   children,
 }: {
   children: React.ReactNode;

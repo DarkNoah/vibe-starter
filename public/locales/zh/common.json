@@ -1,0 +1,25 @@
+{
+  "dashboard": "仪表盘",
+  "paymentGated": "付费功能",
+  "page": "页面",
+  "features": "功能",
+  "solution": "解决方案",
+  "pricing": "定价",
+  "about": "关于",
+  "login": "登录",
+  "signUp": "注册",
+  "getStarted": "开始使用",
+  "welcome": "欢迎",
+  "description": "这是一个不使用路由方式实现的多语言支持演示。",
+  "changeLanguage": "切换语言",
+  "currentLanguage": "当前语言：中文",
+  "introducingAI": "介绍 AI 助手",
+  "heroTitle": "使用 Starter 加速 10 倍开发",
+  "heroSubtitle": "设计、构建、发布现代网站，有 AI 助力。",
+  "startBuilding": "开始构建",
+  "watchVideo": "观看视频",
+  "language": {
+    "en": "English",
+    "zh": "中文"
+  }
+}

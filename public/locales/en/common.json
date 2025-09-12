@@ -1,0 +1,25 @@
+{
+  "dashboard": "Dashboard",
+  "paymentGated": "Payment gated",
+  "page": "Page",
+  "features": "Features",
+  "solution": "Solution",
+  "pricing": "Pricing",
+  "about": "About",
+  "login": "Login",
+  "signUp": "Sign Up",
+  "getStarted": "Get Started",
+  "welcome": "Welcome",
+  "description": "This is a demonstration of multi-language support without route-based implementation.",
+  "changeLanguage": "Change Language",
+  "currentLanguage": "Current Language: English",
+  "introducingAI": "Introducing AI Agents",
+  "heroTitle": "Build 10x Faster with Starter",
+  "heroSubtitle": "Craft. Build. Ship Modern Websites With AI Support.",
+  "startBuilding": "Start Building",
+  "watchVideo": "Watch Video",
+  "language": {
+    "en": "English",
+    "zh": "中文"
+  }
+}
