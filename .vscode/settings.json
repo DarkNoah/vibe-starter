@@ -1,0 +1,7 @@
+{
+    "i18n-ally.localesPaths": [
+        "lib/i18n",
+        "public/locales"
+    ],
+    "i18next.i18nPaths": "/Volumes/Data/workspace/vibe-starter/lib/i18n,/Volumes/Data/workspace/vibe-starter/public/locales"
+}
