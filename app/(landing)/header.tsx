@@ -136,14 +136,14 @@ export const HeroHeader = () => {
                       asChild
                       variant="outline"
                       size="sm"
-                      className={cn(isScrolled && "lg:hidden")}
+                      // className={cn(isScrolled && "lg:hidden")}
                     >
                       <Link href="#">
                         <span>{t("login", "Login")}</span>
                       </Link>
                     </Button>
                   </SignInButton>
-                  <SignUpButton mode="modal">
+                  {/* <SignUpButton mode="modal">
                     <Button
                       asChild
                       size="sm"
@@ -153,8 +153,8 @@ export const HeroHeader = () => {
                         <span>{t("signUp", "Sign Up")}</span>
                       </Link>
                     </Button>
-                  </SignUpButton>
-                  <SignUpButton mode="modal">
+                  </SignUpButton> */}
+                  {/* <SignUpButton mode="modal">
                     <Button
                       asChild
                       size="sm"
@@ -164,7 +164,7 @@ export const HeroHeader = () => {
                         <span>{t("getStarted", "Get Started")}</span>
                       </Link>
                     </Button>
-                  </SignUpButton>
+                  </SignUpButton> */}
                 </Unauthenticated>
               </div>
             </div>

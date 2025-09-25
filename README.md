@@ -123,6 +123,22 @@ NEXT_PUBLIC_CLERK_FRONTEND_API_URL=https://your-clerk-frontend-api-url.clerk.acc
    - Set up your pricing plans in Clerk dashboard
    - Configure payment methods and billing settings
 
+
+9. Configure Clerk Sessions Claims
+   - Go to your Clerk dashboard - Configure - Sessions - Customize session token
+   - Add json claims
+```json
+{
+	"metadata": "{{user.public_metadata}}"
+}
+```
+   - Clerk dashboard - Users - Metadata - public , add json
+```json
+{
+  "role": "admin"
+}
+```
+
 ### Development
 
 Start the development server:

@@ -17,7 +17,7 @@ function usePageTitle(pathname: string): string {
     case "/dashboard/payment-gated":
       return t("paymentGated", "Payment gated");
     default:
-      return t("page", "Page");
+      return "";
   }
 }
 
@@ -36,7 +36,6 @@ export function SiteHeader() {
         <h1 className="text-base font-medium">{pageTitle}</h1>
         <div className="ml-auto flex items-center gap-2">
           <LanguageToggle />
-          <ModeToggle />
         </div>
       </div>
     </header>

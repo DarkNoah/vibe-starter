@@ -12,6 +12,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { ThreadsList } from "@/lib/mastra/components/threads-list";
 
 export function NavMain({
   items,
@@ -55,25 +56,7 @@ export function NavMain({
         </SidebarMenu>
         {/* Main navigation items */}
         <SidebarMenu>
-          {items.map((item) => {
-            // Use optimistic path for instant feedback
-            const isActive =
-              optimisticPath === item.url ||
-              (optimisticPath === "/dashboard" && item.url === "/dashboard");
-
-            return (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  tooltip={item.title}
-                  isActive={isActive}
-                  onClick={() => handleNavigation(item.url)}
-                >
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
+          <ThreadsList></ThreadsList>
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
