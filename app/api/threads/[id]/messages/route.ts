@@ -8,25 +8,13 @@ import {
   type UIMessage,
   LanguageModel,
 } from "ai";
-import { isUiMessage } from "@mastra/core";
+
 export async function GET(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   const auth = getAuth(req as NextRequest);
   const { userId } = auth;
-
-  // const res = await mastra.getMemory()?.query({
-  //   threadId: params.id,
-  //   resourceId: userId!,
-  //   selectBy: {
-  //     pagination: {
-  //       page: 0,
-  //       perPage: 10,
-  //     },
-  //   },
-  // });
-
   const storage = mastra.getStorage();
   const thread = await storage?.getThreadById({
     threadId: params.id,
@@ -42,14 +30,16 @@ export async function GET(
     //   },
     // },
   });
-  const data = { ...res, messages: [] };
-  data.messages = res?.messages?.map((m) => {
-    return {
-      id: m.id,
-      role: m.role,
-      parts: m.content.parts,
-    } as UIMessage;
-  });
+  const data = { ...res, messages: [] } as { messages: UIMessage[] };
+  data.messages =
+    res?.messages?.map((m) => {
+      return {
+        id: m.id,
+        role: m.role,
+        parts: m.content.parts,
+        metadata: m.content?.metadata,
+      } as UIMessage;
+    }) || [];
 
   return new Response(JSON.stringify(data), { status: 200 });
 }
