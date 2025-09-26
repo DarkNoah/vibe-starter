@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-
 FROM node:20-bookworm-slim AS base
 ENV NEXT_TELEMETRY_DISABLED=1
 WORKDIR /app
