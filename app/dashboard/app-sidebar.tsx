@@ -38,6 +38,7 @@ import {
 import { ChatMaxingIconColoured } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { APP_NAME } from "@/lib/constants";
 
 const data = {
   navMain: [
@@ -100,7 +101,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <Link href="/">
                 <ChatMaxingIconColoured className="!size-6" />
-                <span className="text-base font-semibold">Starter DIY</span>
+                <span className="text-base font-semibold">{APP_NAME}</span>
                 <Badge
                   variant="outline"
                   className="text-muted-foreground  text-xs"

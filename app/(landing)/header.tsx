@@ -14,6 +14,7 @@ import { dark } from "@clerk/themes";
 import { useTheme } from "next-themes";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useTranslation } from "react-i18next";
+import { APP_NAME } from "@/lib/constants";
 
 const useMenuItems = () => {
   const { t } = useTranslation();
@@ -64,7 +65,7 @@ export const HeroHeader = () => {
                 className="flex items-center space-x-2"
               >
                 <ChatMaxingIconColoured />
-                <span className="text-xl font-medium">Starter.diy</span>
+                <span className="text-xl font-medium">{APP_NAME}</span>
                 <Badge
                   variant="outline"
                   className="text-muted-foreground  text-xs"

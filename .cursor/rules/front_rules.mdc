@@ -1,0 +1,12 @@
+---
+description: Guidelines for front landing pages
+globs: **/*.ts,**/*.tsx,**/*.js,**/*.jsx
+alwaysApply: true
+---
+
+# Front landing pages guidelines
+- 前端页面在目录 /app/(landing)/ 下
+- 推荐使用以下shadcn组件库
+  - Aceternity UI组件库
+  - Animate-UI组件库
+- 你需要注意适配移动端界面

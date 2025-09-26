@@ -8,6 +8,7 @@ import {
   type UIMessage,
   LanguageModel,
 } from "ai";
+import { convertMessages } from "@mastra/core/agent";
 
 export async function GET(
   req: Request,
@@ -31,15 +32,7 @@ export async function GET(
     // },
   });
   const data = { ...res, messages: [] } as { messages: UIMessage[] };
-  data.messages =
-    res?.messages?.map((m) => {
-      return {
-        id: m.id,
-        role: m.role,
-        parts: m.content.parts,
-        metadata: m.content?.metadata,
-      } as UIMessage;
-    }) || [];
+  data.messages = convertMessages(res?.messages || []).to("AIV5.UI");
 
   return new Response(JSON.stringify(data), { status: 200 });
 }

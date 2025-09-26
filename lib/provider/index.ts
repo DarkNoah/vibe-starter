@@ -5,31 +5,55 @@ import { createGateway, gateway } from "ai";
 import { Provider, ProviderModel } from "@/types/provider";
 import { OpenAI } from "openai";
 import { GoogleGenAI } from "@google/genai";
-import { ConvexHttpClient } from "convex/browser";
-import * as dotenv from "dotenv";
+
 import { createOpenAI } from "@ai-sdk/openai";
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { ProviderV2, LanguageModelV2 } from "@ai-sdk/provider";
-
-dotenv.config({ path: ".env.local" });
-const client = new ConvexHttpClient(
-  process.env["NEXT_PUBLIC_CONVEX_URL"] as string
-);
+import { convexClient } from "../convex/client";
 
 export class ProviderManager {
   public providers: Record<string, any>;
+
   constructor() {
     this.providers = {};
     this.init();
   }
 
   async init() {
-    const res = await client.query(api.providers.list, {});
+    let providers = this.providers;
+    if (providers === undefined) {
+      providers = {};
+    }
+    const res = await convexClient.query(api.providers.list, {});
     res.forEach((x) => {
-      this.providers[x._id] = x;
+      providers[x._id] = x;
     });
+    this.providers = providers;
+  }
+
+  async getAvailableModels(): Promise<{ id: string; name: string }[]> {
+    let providers = [];
+    if (Object.keys(this.providers).length > 0) {
+      providers = Object.values(this.providers).filter((x) => x.isActive);
+    } else {
+      providers = await convexClient.query(api.providers.list, {
+        isActive: true,
+      });
+      providers.forEach((x) => {
+        this.providers[x._id] = x;
+      });
+    }
+    const models: { id: string; name: string }[] = [];
+    providers.forEach((x) => {
+      x.models
+        .filter((y: any) => y.isActive)
+        .forEach((y: any) => {
+          models.push({ id: y.id + "@" + x._id, name: y.name });
+        });
+    });
+    return models;
   }
 
   async getProviderV2(providerId: string): Promise<ProviderV2 | undefined> {
@@ -179,7 +203,7 @@ export class ProviderManager {
     if (this.providers[providerId] && !refresh) {
       return this.providers[providerId];
     }
-    const res = await client.query(api.providers.get, {
+    const res = await convexClient.query(api.providers.get, {
       id: providerId as Id<"providers">,
     });
     this.providers[providerId] = res;

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { IconCaretUpFilled, IconCopyPlus } from "@tabler/icons-react";
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, UIDataTypes, UIMessagePart, UITools } from "ai";
 import { transformersJS } from "@built-in-ai/transformers-js";
@@ -52,31 +52,20 @@ import { Loader } from "@/components/ai-elements/loader";
 import { useRouter } from "next/navigation";
 import emitter from "@/lib/events/event-bus";
 import { useUser } from "@clerk/nextjs";
+import { useModelsStore, useThreadStore } from "@/store";
+import { toast } from "sonner";
+import { ChatInput } from "@/components/chat-ui/chat-input";
 
 export default function Page() {
   const [input, setInput] = useState("");
   const router = useRouter();
   const [files, setFiles] = useState<FileList | undefined>(undefined);
-
-  const models = [
-    {
-      name: "GPT 4o",
-      value: "openai/gpt-4o",
-    },
-    {
-      name: "Deepseek Chat",
-      value: "deepseek/deepseek-chat",
-    },
-    {
-      name: "Deepseek R1",
-      value: "deepseek/deepseek-r1",
-    },
-  ];
-
-  const [model, setModel] = useState<string>(models[0].value);
+  const [model, setModel] = useState<string | undefined>(undefined);
   const [webSearch, setWebSearch] = useState(false);
   const { isSignedIn, user, isLoaded } = useUser();
-
+  // const [models, setModels] = useState<{ name: string; value: string }[]>([]);
+  const setCreateThread = useThreadStore((s) => s.dispatch);
+  const { models, isLoading, error } = useModelsStore();
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
@@ -90,6 +79,10 @@ export default function Page() {
     if (!(hasText || hasAttachments)) {
       return;
     }
+    if (!model) {
+      toast.error("Please select a model");
+      return;
+    }
 
     const res = await fetch("/api/threads", {
       method: "POST",
@@ -97,7 +90,12 @@ export default function Page() {
     const thread = await res.json();
     console.log(thread);
     emitter.emit("threads:created", { id: thread.id });
-    // 跳转
+
+    setCreateThread({
+      threadId: thread.id,
+      message: message,
+      model: model,
+    });
     await router.push(`/threads/${thread.id}`);
 
     // sendMessage(
@@ -139,6 +137,11 @@ export default function Page() {
     );
   }
 
+  useEffect(() => {
+    if (!model && models.length > 0) {
+      setModel(models[0].id);
+    }
+  }, [models]);
   return (
     <div className="flex h-[calc(100vh-440px)] max-h-[800px] min-h-[600px] w-full flex-1 flex-col items-center justify-center px-5">
       <div className="mx-auto mt-10 mb-6 max-w-screen-lg px-4 text-center sm:mt-16 sm:mb-8 md:mt-20 md:mb-10">
@@ -151,13 +154,12 @@ export default function Page() {
           Bring your weirdest, wildest, or most wonderful ideas to life with AI.
         </h2>
       </div>
-
-      <PromptInput
+      <ChatInput
         onSubmit={handleSubmit}
+        status={status}
         className="mt-4 3xl:max-w-[1280px] xl:max-w-[840px] max-w-[600px]"
-        globalDrop
-        multiple
-      >
+      />
+      {/* <PromptInput onSubmit={handleSubmit} globalDrop multiple>
         <PromptInputBody>
           <PromptInputAttachments>
             {(attachment) => <PromptInputAttachment data={attachment} />}
@@ -183,7 +185,7 @@ export default function Page() {
             </PromptInputButton>
             <PromptInputModelSelect
               onValueChange={(value) => {
-                setModel(value);
+                if (value) setModel(value);
               }}
               value={model}
             >
@@ -192,10 +194,7 @@ export default function Page() {
               </PromptInputModelSelectTrigger>
               <PromptInputModelSelectContent>
                 {models.map((model) => (
-                  <PromptInputModelSelectItem
-                    key={model.value}
-                    value={model.value}
-                  >
+                  <PromptInputModelSelectItem key={model.id} value={model.id}>
                     {model.name}
                   </PromptInputModelSelectItem>
                 ))}
@@ -204,7 +203,7 @@ export default function Page() {
           </PromptInputTools>
           <PromptInputSubmit disabled={!input && !status} status={status} />
         </PromptInputToolbar>
-      </PromptInput>
+      </PromptInput> */}
     </div>
   );
 }

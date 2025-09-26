@@ -164,6 +164,24 @@ export const updateModels = mutation({
   },
 });
 
+export const getAvailableModels = query({
+  handler: async (ctx, {}) => {
+    let q = ctx.db
+      .query("providers")
+      .withIndex("byActive", (q) => q.eq("isActive", true));
+    const providers = await q.collect();
+    const models: { id: string; name: string }[] = [];
+    providers.forEach((x) => {
+      x.models
+        .filter((y: any) => y.isActive)
+        .forEach((y: any) => {
+          models.push({ id: y.id + "@" + x._id, name: y.name });
+        });
+    });
+    return models;
+  },
+});
+
 export const remove = mutation({
   args: { id: v.id("providers") },
   returns: v.null(),

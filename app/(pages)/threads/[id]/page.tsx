@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { IconCaretUpFilled, IconCopyPlus } from "@tabler/icons-react";
-import { FC, Fragment, useEffect, useRef, useState } from "react";
+import { FC, Fragment, use, useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, UIDataTypes, UIMessagePart, UITools } from "ai";
 import Image from "next/image";
@@ -27,6 +27,7 @@ import {
   PromptInputTextarea,
   PromptInputToolbar,
   PromptInputTools,
+  usePromptInputAttachments,
 } from "@/components/ai-elements/prompt-input";
 
 import {
@@ -48,36 +49,49 @@ import {
 } from "@/components/ai-elements/reasoning";
 import { Action, Actions } from "@/components/ai-elements/actions";
 import { Response } from "@/components/ai-elements/response";
-import { CopyIcon, GlobeIcon } from "lucide-react";
+import { AlertCircleIcon, CopyIcon, GlobeIcon, MicIcon } from "lucide-react";
 import { Loader } from "@/components/ai-elements/loader";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTheme } from "next-themes";
 import { api } from "@/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useUser } from "@clerk/nextjs";
+import AgentSelecter from "@/lib/mastra/components/agent-selecter";
+import { useModelsStore, useThreadStore } from "@/store";
+import { ChatInput } from "@/components/chat-ui/chat-input";
 
 interface ThreadPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
-const ThreadPage: FC<ThreadPageProps> = ({ params }) => {
+const ThreadPage: FC<ThreadPageProps> = ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) => {
+  const { id } = use(params);
   const [input, setInput] = useState("");
   const { theme } = useTheme();
   const { user } = useUser();
+  const createThread = useThreadStore((s) => s.createThread);
 
-  const [models, setModels] = useState<{ name: string; value: string }[]>([]);
+  //const [models, setModels] = useState<{ name: string; value: string }[]>([]);
   const [model, setModel] = useState<string | undefined>(undefined);
+  const { models, isLoading } = useModelsStore();
   const [webSearch, setWebSearch] = useState(false);
+  const [agentId, setAgentId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const generateUploadUrl = useMutation(api.uploads.generateUploadUrl);
   const getFileUrl = useMutation(api.uploads.getFileUrl);
+  const [useMicrophone, setUseMicrophone] = useState<boolean>(false);
 
-  const { messages, setMessages, sendMessage, status } = useChat({
+  const { messages, setMessages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
       prepareSendMessagesRequest: (data) => {
@@ -93,7 +107,7 @@ const ThreadPage: FC<ThreadPageProps> = ({ params }) => {
     }),
   });
 
-  const handleSubmit = async (message: PromptInputMessage) => {
+  const handleSubmit = async (message: PromptInputMessage, _model?: string) => {
     const hasText = Boolean(message.text);
     const hasAttachments = Boolean(message.files?.length);
 
@@ -101,35 +115,8 @@ const ThreadPage: FC<ThreadPageProps> = ({ params }) => {
       return;
     }
 
-    // base64
-    // for (const file of message.files || []) {
-    //   const res = await new Promise<{
-    //     type: "file";
-    //     mediaType: string;
-    //     url: string;
-    //   }>((resolve, reject) => {
-    //     const reader = new FileReader();
-    //     reader.onload = () => {
-    //       resolve({
-    //         type: "file",
-    //         mediaType: file.mediaType,
-    //         url: reader.result as string,
-    //       });
-    //     };
-    //     reader.onerror = reject;
-
-    //     fetch(file.url).then(async (response) => {
-    //       const blob = await response.blob();
-    //       reader.readAsDataURL(blob);
-    //     });
-    //   });
-    //   file.url =
-    //     "data:" + file.mediaType + res.url.substring(res.url.indexOf(";"));
-    // }
-
     for (const file of message.files || []) {
       const postUrl = await generateUploadUrl();
-      const formData = new FormData();
       const response = await fetch(file.url);
       const blob = await response.blob();
       const uploadfile = new File([blob], file.filename as string, {
@@ -154,9 +141,10 @@ const ThreadPage: FC<ThreadPageProps> = ({ params }) => {
       },
       {
         body: {
-          model: model,
+          model: _model || model,
           webSearch: webSearch,
-          threadId: params.id,
+          threadId: id,
+          agentId: agentId,
         },
       }
     );
@@ -190,30 +178,28 @@ const ThreadPage: FC<ThreadPageProps> = ({ params }) => {
   useEffect(() => {
     const fetchThread = async () => {
       setLoading(true);
-      const res = await fetch(`/api/threads/${params.id}/messages`);
+      const res = await fetch(`/api/threads/${id}/messages`);
       const thread = await res.json();
       console.log(thread);
       setMessages(thread.messages);
       setLoading(false);
-    };
-    const fetchModels = async () => {
-      const res = await fetch(`/api/models`);
-      const models = await res.json();
-      console.log(models);
-
-      setModels(
-        models.map((x: { name: string; id: string }) => ({
-          name: x.name,
-          value: x.id,
-        }))
-      );
-      if (!model && models.length > 0) {
-        setModel(models[0].id);
+      if (createThread && createThread.threadId == id) {
+        if (createThread.model) setModel(createThread.model);
+        handleSubmit(createThread.message, createThread.model);
       }
     };
+
     fetchThread();
-    fetchModels();
   }, []);
+
+  useEffect(() => {
+    if (!model && models.length > 0) {
+      setModel(models[0].id);
+      if (createThread && createThread.threadId == id && createThread.model) {
+        setModel(createThread.model);
+      }
+    }
+  }, [models]);
 
   return (
     <div className="flex h-[calc(100vh-var(--header-height)-(var(--spacing)*8))] w-full flex-col items-center justify-center px-5">
@@ -235,7 +221,6 @@ const ThreadPage: FC<ThreadPageProps> = ({ params }) => {
           </h2>
         </div>
       )}
-      <pre>{JSON.stringify(user, null, 2)}</pre>
       <Conversation className="h-full w-full relative">
         <ConversationContent>
           {messages.map((message) => (
@@ -264,6 +249,7 @@ const ThreadPage: FC<ThreadPageProps> = ({ params }) => {
                       ))}
                   </Sources>
                 )}
+
               {message.parts.map((part, i) => {
                 switch (part.type) {
                   case "text":
@@ -274,25 +260,24 @@ const ThreadPage: FC<ThreadPageProps> = ({ params }) => {
                             <Response>{part.text}</Response>
                           </MessageContent>
                         </Message>
-                        {message.role === "assistant" &&
-                          i === messages.length - 1 && (
-                            <Actions className="mt-2">
-                              {/* <Action
+                        {message.role === "assistant" && (
+                          <Actions className="mt-2">
+                            {/* <Action
                                 onClick={() => regenerate()}
                                 label="Retry"
                               >
                                 <RefreshCcwIcon className="size-3" />
                               </Action> */}
-                              <Action
-                                onClick={() =>
-                                  navigator.clipboard.writeText(part.text)
-                                }
-                                label="Copy"
-                              >
-                                <CopyIcon className="size-3" />
-                              </Action>
-                            </Actions>
-                          )}
+                            <Action
+                              onClick={() =>
+                                navigator.clipboard.writeText(part.text)
+                              }
+                              label="Copy"
+                            >
+                              <CopyIcon className="size-3" />
+                            </Action>
+                          </Actions>
+                        )}
                       </Fragment>
                     );
                   case "file":
@@ -321,7 +306,7 @@ const ThreadPage: FC<ThreadPageProps> = ({ params }) => {
                           className={`w-full flex ${message.role == "user" ? "items-end justify-end" : ""}`}
                         />
                       );
-                    } else return <></>;
+                    } else return null;
 
                   case "reasoning":
                     return (
@@ -345,66 +330,35 @@ const ThreadPage: FC<ThreadPageProps> = ({ params }) => {
             </div>
           ))}
           {status === "submitted" && <Loader />}
+          {status == "error" && (
+            <Alert variant="destructive">
+              <AlertCircleIcon />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                <p>{error?.message}</p>
+              </AlertDescription>
+            </Alert>
+          )}
         </ConversationContent>
         <ConversationScrollButton />
         <div
           className={`absolute bottom-0 left-0 right-0 bg-gradient-to-b from-transparent ${theme === "dark" ? "to-black" : "to-white"} w-full h-14`}
         ></div>
       </Conversation>
-      <PromptInput
-        onSubmit={handleSubmit}
+      <div className="w-full flex justify-items-start mb-2">
+        <AgentSelecter
+          value={agentId}
+          onChange={setAgentId}
+          autoSelectFirst
+        ></AgentSelecter>
+      </div>
+      <ChatInput
+        onSubmit={(e) => handleSubmit(e, model)}
+        status={status}
         className="flex flex-col relative"
         globalDrop
         multiple
-      >
-        <PromptInputBody className="flex-1">
-          <PromptInputAttachments>
-            {(attachment) => <PromptInputAttachment data={attachment} />}
-          </PromptInputAttachments>
-          <PromptInputTextarea
-            rows={4}
-            onChange={(e) => setInput(e.target.value)}
-            value={input}
-          />
-        </PromptInputBody>
-        <PromptInputToolbar>
-          <PromptInputTools>
-            <PromptInputActionMenu>
-              <PromptInputActionMenuTrigger />
-              <PromptInputActionMenuContent>
-                <PromptInputActionAddAttachments />
-              </PromptInputActionMenuContent>
-            </PromptInputActionMenu>
-            <PromptInputButton
-              variant={webSearch ? "default" : "ghost"}
-              onClick={() => setWebSearch(!webSearch)}
-            >
-              <GlobeIcon size={16} />
-            </PromptInputButton>
-            <PromptInputModelSelect
-              onValueChange={(value) => {
-                setModel(value);
-              }}
-              value={model}
-            >
-              <PromptInputModelSelectTrigger>
-                <PromptInputModelSelectValue />
-              </PromptInputModelSelectTrigger>
-              <PromptInputModelSelectContent>
-                {models.map((model) => (
-                  <PromptInputModelSelectItem
-                    key={model.value}
-                    value={model.value}
-                  >
-                    {model.name}
-                  </PromptInputModelSelectItem>
-                ))}
-              </PromptInputModelSelectContent>
-            </PromptInputModelSelect>
-          </PromptInputTools>
-          <PromptInputSubmit disabled={!input && !status} status={status} />
-        </PromptInputToolbar>
-      </PromptInput>
+      />
     </div>
   );
 };

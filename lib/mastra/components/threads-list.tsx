@@ -1,7 +1,13 @@
 "use client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ComponentProps, useEffect, useState } from "react";
+import {
+  ComponentProps,
+  useEffect,
+  useOptimistic,
+  useState,
+  useTransition,
+} from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { type StorageThreadType } from "@mastra/core/memory";
 import { Button } from "@/components/ui/button";
@@ -12,7 +18,7 @@ import {
   IconTrashX,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +39,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { t } from "i18next";
 import emitter from "@/lib/events/event-bus";
+import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 export type ThreadsListProps = {
   className?: string;
 };
@@ -44,6 +51,18 @@ export const ThreadsList = ({ className }: ThreadsListProps) => {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [currentId, setCurrentId] = useState<string | null>(null);
+
+  const pathname = usePathname();
+  const [optimisticPath, setOptimisticPath] = useOptimistic(pathname);
+  const [isPending, startTransition] = useTransition();
+
+  const handleNavigation = (url: string) => {
+    startTransition(() => {
+      setOptimisticPath(url);
+      router.push(url);
+    });
+  };
+
   const [threadPendingDeletion, setThreadPendingDeletion] =
     useState<StorageThreadType | null>(null);
   const params = useParams();
@@ -85,7 +104,7 @@ export const ThreadsList = ({ className }: ThreadsListProps) => {
       return false;
     }
     setItems((prev) => prev.filter((item) => item.id !== id));
-    if (currentId === id) router.push("/create");
+    if (currentId === id) router.push("/threads");
     return true;
   };
 
@@ -123,52 +142,63 @@ export const ThreadsList = ({ className }: ThreadsListProps) => {
         }
       >
         {items.map((item) => (
-          <div
-            // href={`/threads/${item.id}`}
+          <SidebarMenuItem
             key={item.id}
-            className={`rounded-md p-2 cursor-pointer flex flex-row justify-between items-center gap-2 group/item h-10 hover:bg-accent ${
-              currentId === item.id ? "bg-accent" : ""
-            }`}
+            className="group/item mb-1 cursor-pointer"
           >
-            <Link href={`/threads/${item.id}`} className="truncate w-full">
-              {item.title}
-            </Link>
-            <div className="opacity-0 group-hover/item:opacity-100 transition-opacity duration-200">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="size-6 cursor-pointer"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                  >
-                    <IconDots></IconDots>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="bottom" align="end" sideOffset={8}>
-                  <DropdownMenuItem>
-                    <div className="flex flex-row items-center gap-2">
-                      <IconShare /> {t("share")}
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onSelect={(event) => {
-                      //event.preventDefault();
-                      setThreadPendingDeletion(item);
-                    }}
-                  >
-                    <div className="flex flex-row items-center gap-2">
-                      <IconTrashX /> {t("delete")}
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+            <SidebarMenuButton
+              asChild
+              isActive={optimisticPath.startsWith(`/threads/${item.id}`)}
+              className="truncate w-full flex flex-row justify-between"
+            >
+              <div
+                className="truncate w-full flex flex-row justify-between"
+                onClick={() => handleNavigation(`/threads/${item.id}`)}
+              >
+                {item.title}
+                <div className="opacity-0 group-hover/item:opacity-100 transition-opacity duration-200">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="size-6 cursor-pointer"
+                      >
+                        <IconDots></IconDots>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      side="bottom"
+                      align="end"
+                      sideOffset={8}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <DropdownMenuItem
+                        onSelect={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                        }}
+                      >
+                        <div className="flex flex-row items-center gap-2">
+                          <IconShare /> {t("share")}
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onSelect={(event) => {
+                          setThreadPendingDeletion(item);
+                        }}
+                      >
+                        <div className="flex flex-row items-center gap-2">
+                          <IconTrashX /> {t("delete")}
+                        </div>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         ))}
       </InfiniteScroll>
       <AlertDialog

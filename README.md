@@ -102,7 +102,23 @@ npx convex dev
 5. Set up Clerk JWT Template:
    - Go to your Clerk dashboard
    - Navigate to JWT Templates
-   - Create a new template with name "convex"
+   - Create a new template with name "convex", and goto Customize session token  - Claims fill
+```json
+{
+	"aud": "convex",
+	"name": "{{user.full_name}}",
+	"email": "{{user.primary_email_address}}",
+	"picture": "{{user.image_url}}",
+	"nickname": "{{user.username}}",
+	"given_name": "{{user.first_name}}",
+	"updated_at": "{{user.updated_at}}",
+	"family_name": "{{user.last_name}}",
+	"phone_number": "{{user.primary_phone_number}}",
+	"email_verified": "{{user.email_verified}}",
+	"public_metadata": "{{user.public_metadata}}",
+	"phone_number_verified": "{{user.phone_number_verified}}"
+}
+```
    - Copy the Issuer URL - this becomes your `NEXT_PUBLIC_CLERK_FRONTEND_API_URL`
    - Add this URL to both your `.env.local` and Convex environment variables
 
