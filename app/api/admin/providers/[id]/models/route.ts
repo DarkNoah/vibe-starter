@@ -3,13 +3,15 @@ import providerManager from "@/lib/provider";
 import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
 import type { ProviderModel } from "@/types/provider";
+import { Id } from "@/convex/_generated/dataModel";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const models = await providerManager.getModelList(params.id);
+    const { id } = await params;
+    const models = await providerManager.getModelList(id as string);
     return NextResponse.json(models ?? [], { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
@@ -21,9 +23,10 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await req.json();
     const incoming: ProviderModel[] = Array.isArray(body)
       ? body
@@ -46,7 +49,7 @@ export async function PATCH(
     );
 
     await client.mutation(api.providers.updateModels, {
-      id: params.id as any,
+      id: id as Id<"providers">,
       patch: {
         models: incoming,
       },

@@ -12,18 +12,18 @@ import { convertMessages } from "@mastra/core/agent";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const auth = getAuth(req as NextRequest);
   const { userId } = auth;
   const storage = mastra.getStorage();
   const thread = await storage?.getThreadById({
-    threadId: params.id,
+    threadId: id,
   });
-
   const res = await storage?.getMessagesPaginated({
     format: "v2",
-    threadId: params.id,
+    threadId: id,
     // selectBy: {
     //   pagination: {
     //     page: 0,

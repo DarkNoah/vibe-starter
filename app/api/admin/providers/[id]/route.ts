@@ -3,10 +3,11 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const provider = await providerManager.getProvider(params.id, true);
+    const { id } = await params;
+    const provider = await providerManager.getProvider(id, true);
     return NextResponse.json(provider, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
