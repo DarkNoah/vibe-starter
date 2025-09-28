@@ -1,13 +1,13 @@
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core/agent";
-import { storage } from "../storage";
+import { getStorage } from "../storage";
 import { Memory } from "@mastra/memory";
 import { londonWeatherTool } from "../tools/london-weather-tool";
 const deepseek = createDeepSeek();
 
 const memory = new Memory({
-  storage: storage,
+  storage: getStorage(),
   options: {
     semanticRecall: false,
     workingMemory: {

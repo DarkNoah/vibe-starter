@@ -7,6 +7,7 @@ alwaysApply: true
 # Front landing pages guidelines
 - 前端页面在目录 /app/(landing)/ 下
 - 推荐使用以下shadcn组件库
-  - Aceternity UI组件库
-  - Animate-UI组件库
+  - Aceternity UI组件库, 官网 https://ui.aceternity.com/
+  - Animate-UI组件库, 官网 https://animate-ui.com/ 支持很多动画特效
+  - ReactBits组件库, 官网 https://reactbits.dev/ , 可以使用 npx shadcn@latest add https://reactbits.dev/r/<COMPONENT>-TS-TW
 - 你需要注意适配移动端界面
