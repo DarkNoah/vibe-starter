@@ -64,7 +64,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useUser } from "@clerk/nextjs";
 import AgentSelecter from "@/lib/mastra/components/agent-selecter";
 import { useModelsStore, useThreadStore } from "@/store";
-import { ChatInput } from "@/components/chat-ui/chat-input";
+import { ChatInput, ChatInputRef } from "@/components/chat-ui/chat-input";
 
 interface ThreadPageProps {
   params: Promise<{ id: string }>;
@@ -80,7 +80,7 @@ const ThreadPage: FC<ThreadPageProps> = ({
   const { theme } = useTheme();
   const { user } = useUser();
   const createThread = useThreadStore((s) => s.createThread);
-
+  const chatInputRef = useRef<ChatInputRef>(null);
   //const [models, setModels] = useState<{ name: string; value: string }[]>([]);
   const [model, setModel] = useState<string | undefined>(undefined);
   const { models, isLoading } = useModelsStore();
@@ -149,6 +149,7 @@ const ThreadPage: FC<ThreadPageProps> = ({
       }
     );
     setInput("");
+    chatInputRef.current?.attachmentsClear();
   };
 
   async function convertFilesToDataURLs(files: FileList) {
@@ -341,9 +342,6 @@ const ThreadPage: FC<ThreadPageProps> = ({
           )}
         </ConversationContent>
         <ConversationScrollButton />
-        <div
-          className={`absolute bottom-0 left-0 right-0 bg-gradient-to-b from-transparent ${theme === "dark" ? "to-black" : "to-white"} w-full h-14`}
-        ></div>
       </Conversation>
       <div className="w-full flex justify-items-start mb-2">
         <AgentSelecter
@@ -353,11 +351,14 @@ const ThreadPage: FC<ThreadPageProps> = ({
         ></AgentSelecter>
       </div>
       <ChatInput
+        ref={chatInputRef}
         onSubmit={(e) => handleSubmit(e, model)}
         status={status}
         className="flex flex-col relative"
         globalDrop
         multiple
+        input={input}
+        setInput={setInput}
       />
     </div>
   );

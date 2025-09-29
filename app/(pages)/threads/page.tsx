@@ -57,7 +57,7 @@ import { toast } from "sonner";
 import { ChatInput } from "@/components/chat-ui/chat-input";
 
 export default function Page() {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState<string | undefined>(undefined);
   const router = useRouter();
   const [files, setFiles] = useState<FileList | undefined>(undefined);
   const [model, setModel] = useState<string | undefined>(undefined);
@@ -87,6 +87,7 @@ export default function Page() {
     const res = await fetch("/api/threads", {
       method: "POST",
     });
+    setInput("");
     const thread = await res.json();
     console.log(thread);
     emitter.emit("threads:created", { id: thread.id });
@@ -157,6 +158,8 @@ export default function Page() {
       <ChatInput
         onSubmit={handleSubmit}
         status={status}
+        input={input}
+        setInput={setInput}
         className="mt-4 3xl:max-w-[1280px] xl:max-w-[840px] max-w-[600px]"
       />
       {/* <PromptInput onSubmit={handleSubmit} globalDrop multiple>

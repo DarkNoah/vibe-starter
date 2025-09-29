@@ -10,7 +10,7 @@ let storage: MastraStorage | null = null;
 
 export const getStorage = () => {
   if (!storage) {
-    switch (process.env.MASTRA_STORAGE_TYPE?.toLocaleLowerCase()) {
+    switch (process.env.MASTRA_STORAGE?.toLocaleLowerCase()) {
       case "libsql":
         const url =
           process.env.MASTRA_STORAGE_DATABASE_URL || "file:./.data/storage.db";
@@ -18,7 +18,7 @@ export const getStorage = () => {
         const dirPath = path.dirname(filePath);
         fs.mkdirSync(dirPath, { recursive: true });
         storage = new LibSQLStore({
-          url: process.env.MASTRA_STORAGE_DATABASE_URL as string,
+          url: url,
         });
         break;
       case "pg":

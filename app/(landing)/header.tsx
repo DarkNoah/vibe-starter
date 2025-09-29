@@ -122,8 +122,11 @@ export const HeroHeader = () => {
                 </AuthLoading>
                 <Authenticated>
                   <Button asChild size="sm">
-                    <Link href="/dashboard">
+                    {/* <Link href="/dashboard">
                       <span>{t("dashboard")}</span>
+                    </Link> */}
+                    <Link href="/threads">
+                      <span>{t("New Chat")}</span>
                     </Link>
                   </Button>
                   <LanguageToggle />

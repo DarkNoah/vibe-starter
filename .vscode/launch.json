@@ -6,8 +6,8 @@
       "type": "node",
       "request": "launch",
       "name": "Next.js: dev (server)",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["next", "dev", "--turbo"],
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
       "cwd": "${workspaceFolder}",
       "env": {
         "NODE_OPTIONS": "--inspect",
@@ -49,12 +49,8 @@
   ],
   "compounds": [
     {
-      "name": "Full-stack: Next + Convex + Chrome",
-      "configurations": [
-        "Next.js: dev (server)",
-        "Convex: dev (server)",
-        "Chrome: attach to Next.js"
-      ]
+      "name": "Full-stack: Next + Chrome",
+      "configurations": ["Next.js: dev (server)", "Chrome: attach to Next.js"]
     }
   ]
 }
