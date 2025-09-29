@@ -6,7 +6,6 @@ import {
   type UIMessage,
   LanguageModel,
 } from "ai";
-import mastra from "@/lib/mastra";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextRequest } from "next/server";
 import providerManager from "@/lib/provider";

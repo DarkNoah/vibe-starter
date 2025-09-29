@@ -3,19 +3,34 @@ import { LibSQLStore } from "@mastra/libsql";
 import { testAgent } from "./agents/test-agent";
 import { getStorage } from "./storage";
 
-const mastra = new Mastra({
-  agents: { testAgent },
-  storage: getStorage(),
-  telemetry: {
-    enabled: false,
-  },
-});
+// const mastra = new Mastra({
+//   agents: { testAgent },
+//   storage: getStorage(),
+//   telemetry: {
+//     enabled: false,
+//   },
+// });
 
-declare global {
-  var _mastra: Mastra | undefined;
-}
-if (!global._mastra) {
-  global._mastra = mastra;
-}
+// declare global {
+//   var _mastra: Mastra | undefined;
+// }
+// if (!global._mastra) {
+//   global._mastra = mastra;
+// }
 
-export default global._mastra ?? mastra;
+// export default global._mastra ?? mastra;
+
+let mastra: Mastra | null = null;
+
+export const getMastra = () => {
+  if (!mastra) {
+    mastra = new Mastra({
+      agents: { testAgent },
+      storage: getStorage(),
+      telemetry: {
+        enabled: false,
+      },
+    });
+  }
+  return mastra;
+};

@@ -6,7 +6,7 @@ import {
   type UIMessage,
   LanguageModel,
 } from "ai";
-import mastra from "@/lib/mastra";
+import { getMastra } from "@/lib/mastra";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextRequest } from "next/server";
 import providerManager from "@/lib/provider";
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     threadId: string;
   } = await req.json();
 
-  const agent = mastra.getAgentById("test-agent");
+  const agent = getMastra().getAgentById("test-agent");
   agent.model = (await providerManager.getLanguageModel(
     model
   )) as MastraLanguageModel;

@@ -6,14 +6,14 @@ import {
   type UIMessage,
   LanguageModel,
 } from "ai";
-import mastra from "@/lib/mastra";
+import { getMastra } from "@/lib/mastra";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import providerManager from "@/lib/provider";
 import { MastraLanguageModel } from "@mastra/core";
 
 export async function GET(req: Request) {
-  const agents = mastra.getAgents();
+  const agents = getMastra().getAgents();
   return NextResponse.json(
     Object.values(agents).map((agent) => {
       return {
