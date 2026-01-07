@@ -1,6 +1,6 @@
 # Starter.diy - Elite Next.js SaaS Starter Kit
 
-A modern, production-ready SaaS starter template for building full-stack applications using Next.js 15, Convex, Clerk, and Clerk Billing. The easiest way to start accepting payments with beautiful UI and seamless integrations.
+A modern, production-ready SaaS starter template for building full-stack applications using Next.js 15, Clerk, and Clerk Billing. The easiest way to start accepting payments with beautiful UI and seamless integrations.
 
 [🌐 Live Demo](https://elite-next-clerk-convex-starter.vercel.app/) – Try the app in your browser!
 
@@ -12,7 +12,6 @@ A modern, production-ready SaaS starter template for building full-stack applica
 - 🎨 **TailwindCSS v4** - Modern utility-first CSS with custom design system
 - 🔐 **Clerk Authentication** - Complete user management with social logins
 - 💳 **Clerk Billing** - Integrated subscription management and payments
-- 🗄️ **Convex Real-time Database** - Serverless backend with real-time sync
 - 🛡️ **Protected Routes** - Authentication-based route protection
 - 💰 **Payment Gating** - Subscription-based content access
 - 🎭 **Beautiful 404 Page** - Custom animated error page
@@ -38,7 +37,6 @@ A modern, production-ready SaaS starter template for building full-stack applica
 - **React Bits** - Custom animation components
 
 ### Backend & Services
-- **Convex** - Real-time database and serverless functions
 - **Clerk** - Authentication and user management
 - **Clerk Billing** - Subscription billing and payments
 - **Svix** - Webhook handling and validation
@@ -54,7 +52,6 @@ A modern, production-ready SaaS starter template for building full-stack applica
 
 - Node.js 18+ 
 - Clerk account for authentication and billing
-- Convex account for database
 
 ### Installation
 
@@ -75,67 +72,28 @@ cp .env.example .env.local
 3. Configure your environment variables in `.env.local`:
 
 ```bash
-# Convex Configuration
-CONVEX_DEPLOYMENT=your_convex_deployment_here
-NEXT_PUBLIC_CONVEX_URL=your_convex_url_here
-
 # Clerk Authentication & Billing
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key_here
 CLERK_SECRET_KEY=your_clerk_secret_key_here
-
-# Clerk Frontend API URL (from JWT template - see step 5)
-NEXT_PUBLIC_CLERK_FRONTEND_API_URL=https://your-clerk-frontend-api-url.clerk.accounts.dev
 
 # Clerk Redirect URLs
 NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL=/dashboard
 NEXT_PUBLIC_CLERK_SIGN_UP_FORCE_REDIRECT_URL=/dashboard
 NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
 NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/dashboard
+
+# Model providers
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODELS=gpt-4o-mini
+DEEPSEEK_API_KEY=your_deepseek_api_key
+DEEPSEEK_MODELS=deepseek-chat
 ```
-
-4. Initialize Convex:
-
-```bash
-npx convex dev
-```
-
-5. Set up Clerk JWT Template:
-   - Go to your Clerk dashboard
-   - Navigate to JWT Templates
-   - Create a new template with name "convex", and goto Customize session token  - Claims fill
-```json
-{
-	"aud": "convex",
-	"name": "{{user.full_name}}",
-	"email": "{{user.primary_email_address}}",
-	"picture": "{{user.image_url}}",
-	"nickname": "{{user.username}}",
-	"given_name": "{{user.first_name}}",
-	"updated_at": "{{user.updated_at}}",
-	"family_name": "{{user.last_name}}",
-	"phone_number": "{{user.primary_phone_number}}",
-	"email_verified": "{{user.email_verified}}",
-	"public_metadata": "{{user.public_metadata}}",
-	"phone_number_verified": "{{user.phone_number_verified}}"
-}
-```
-   - Copy the Issuer URL - this becomes your `NEXT_PUBLIC_CLERK_FRONTEND_API_URL`
-   - Add this URL to both your `.env.local` and Convex environment variables
-
-6. Set up Convex environment variables in your Convex dashboard:
-
-```bash
-# In Convex Dashboard Environment Variables
-CLERK_WEBHOOK_SECRET=whsec_your_webhook_secret_here
-NEXT_PUBLIC_CLERK_FRONTEND_API_URL=https://your-clerk-frontend-api-url.clerk.accounts.dev
-```
-
-7. Set up Clerk webhooks:
+4. Set up Clerk webhooks:
    - In your Clerk dashboard, configure webhook endpoint: `{your_domain}/clerk-users-webhook`
    - Enable events: `user.created`, `user.updated`, `user.deleted`, `paymentAttempt.updated`
-   - Copy the webhook signing secret to your Convex environment variables
+   - Copy the webhook signing secret to your deployment environment
 
-8. Configure Clerk Billing:
+5. Configure Clerk Billing:
    - Set up your pricing plans in Clerk dashboard
    - Configure payment methods and billing settings
 
@@ -175,7 +133,6 @@ Your application will be available at `http://localhost:3000`.
 
 ### Authentication Flow
 - Seamless sign-up/sign-in with Clerk
-- Automatic user sync to Convex database
 - Protected routes with middleware
 - Social login support
 - Automatic redirects to dashboard after auth
@@ -185,23 +142,6 @@ Your application will be available at `http://localhost:3000`.
 - Subscription-based access control
 - Real-time payment status updates
 - Webhook-driven payment tracking
-
-### Database Schema
-```typescript
-// Users table
-users: {
-  name: string,
-  externalId: string // Clerk user ID
-}
-
-// Payment attempts tracking
-paymentAttempts: {
-  payment_id: string,
-  userId: Id<"users">,
-  payer: { user_id: string },
-  // ... additional payment data
-}
-```
 
 ## Project Structure
 
@@ -224,11 +164,6 @@ paymentAttempts: {
 │   ├── custom-clerk-pricing.tsx
 │   ├── theme-provider.tsx
 │   └── ...
-├── convex/                 # Backend functions
-│   ├── schema.ts           # Database schema
-│   ├── users.ts            # User management
-│   ├── paymentAttempts.ts  # Payment tracking
-│   └── http.ts             # Webhook handlers
 ├── lib/
 │   └── utils.ts            # Utility functions
 └── middleware.ts           # Route protection
@@ -268,20 +203,20 @@ The starter kit includes a fully customizable theme system. You can customize co
 
 ### Required for .env.local
 
-- `CONVEX_DEPLOYMENT` - Your Convex deployment URL
-- `NEXT_PUBLIC_CONVEX_URL` - Your Convex client URL
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - Clerk publishable key
 - `CLERK_SECRET_KEY` - Clerk secret key
-- `NEXT_PUBLIC_CLERK_FRONTEND_API_URL` - Clerk frontend API URL (from JWT template)
 - `NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL` - Redirect after sign in
 - `NEXT_PUBLIC_CLERK_SIGN_UP_FORCE_REDIRECT_URL` - Redirect after sign up
 - `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL` - Fallback redirect for sign in
 - `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL` - Fallback redirect for sign up
-
-### Required for Convex Dashboard
-
-- `CLERK_WEBHOOK_SECRET` - Clerk webhook secret (set in Convex dashboard)
-- `NEXT_PUBLIC_CLERK_FRONTEND_API_URL` - Clerk frontend API URL (set in Convex dashboard)
+- `OPENAI_API_KEY` - OpenAI API key
+- `OPENAI_MODELS` - Comma-separated OpenAI models
+- `DEEPSEEK_API_KEY` - DeepSeek API key (optional)
+- `DEEPSEEK_MODELS` - Comma-separated DeepSeek models (optional)
+- `GOOGLE_API_KEY` - Google API key (optional)
+- `GOOGLE_MODELS` - Comma-separated Google models (optional)
+- `ANTHROPIC_API_KEY` - Anthropic API key (optional)
+- `ANTHROPIC_MODELS` - Comma-separated Anthropic models (optional)
 
 ## Deployment
 
@@ -319,7 +254,6 @@ npm start
 
 ### Features
 - Add new dashboard pages in `app/dashboard/`
-- Extend database schema in `convex/schema.ts`
 - Create custom components in `components/`
 
 ## Scripts
@@ -333,7 +267,7 @@ npm start
 
 **THE EASIEST TO SET UP. EASIEST IN TERMS OF CODE.**
 
-- ✅ **Clerk + Convex + Clerk Billing** make it incredibly simple
+- ✅ **Clerk + Clerk Billing** make it incredibly simple
 - ✅ **No complex payment integrations** - Clerk handles everything
 - ✅ **Real-time user sync** - Webhooks work out of the box
 - ✅ **Beautiful UI** - Tailark.com inspired landing page blocks
@@ -354,9 +288,9 @@ This project is licensed under the MIT License.
 
 ---
 
-**Stop rebuilding the same foundation over and over.** Starter.diy eliminates weeks of integration work by providing a complete, production-ready SaaS template with authentication, payments, and real-time data working seamlessly out of the box.
+**Stop rebuilding the same foundation over and over.** Starter.diy eliminates weeks of integration work by providing a complete, production-ready SaaS template with authentication, payments, and a configurable provider layer out of the box.
 
-Built with ❤️ using Next.js 15, Convex, Clerk, and modern web technologies.
+Built with ❤️ using Next.js 15, Clerk, and modern web technologies.
 
 
 

@@ -1,16 +1,15 @@
 "use client";
 import { useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { useModelsStore, ModelItem } from "@/store";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 
 export default function GlobalProviders() {
-  const { isLoaded, isSignedIn, getToken } = useAuth();
+  const { status } = useSession();
+  const isLoaded = status !== "loading";
+  const isSignedIn = status === "authenticated";
   const setModels = useModelsStore((s) => s.setModels);
   const setLoading = useModelsStore((s) => s.setLoading);
   const setError = useModelsStore((s) => s.setError);
-  const models = useQuery(api.providers.getAvailableModels, {});
 
   useEffect(() => {
     async function fetchModels() {
@@ -23,17 +22,20 @@ export default function GlobalProviders() {
       }
       try {
         setLoading(true);
-        // 如果后端需要鉴权，可带上 Clerk token
-        //const token = await getToken({ template: undefined }).catch(() => null);
-        setModels(models?.map((x) => ({ id: x.id, name: x.name })) ?? []);
+        setError(null);
+        const res = await fetch("/api/models");
+        if (!res.ok) throw new Error(await res.text());
+        const data = (await res.json()) as ModelItem[];
+        setModels(data ?? []);
       } catch (err: any) {
+        setError(err?.message ?? "Failed to load models");
       } finally {
         setLoading(false);
       }
     }
     fetchModels();
     return () => {};
-  }, [isLoaded, isSignedIn, getToken, setModels, setLoading, setError]);
+  }, [isLoaded, isSignedIn, setModels, setLoading, setError]);
 
   return null;
 }

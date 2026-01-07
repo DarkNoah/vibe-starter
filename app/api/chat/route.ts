@@ -1,15 +1,10 @@
-import { openai } from "@ai-sdk/openai";
-import { createDeepSeek } from "@ai-sdk/deepseek";
 import {
-  streamText,
   convertToModelMessages,
   type UIMessage,
-  LanguageModel,
 } from "ai";
 import { getMastra } from "@/lib/mastra";
-import { getAuth } from "@clerk/nextjs/server";
-import { NextRequest } from "next/server";
-import providerManager from "@/lib/provider";
+import { auth } from "@/auth";
+import { getProviderManager } from "@/lib/provider";
 import { MastraLanguageModel } from "@mastra/core";
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -28,11 +23,14 @@ export async function POST(req: Request) {
   } = await req.json();
 
   const agent = getMastra().getAgentById("test-agent");
-  agent.model = (await providerManager.getLanguageModel(
+  agent.model = (await getProviderManager().getLanguageModel(
     model
   )) as MastraLanguageModel;
-  const auth = getAuth(req as NextRequest);
-  const { userId } = auth;
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    return new Response("Unauthorized", { status: 401 });
+  }
   const result = await (
     await agent.getMemory()
   )?.query({
@@ -63,12 +61,19 @@ export async function POST(req: Request) {
     onError: (error) => {
       console.log("Stream error:", error);
     },
+    onChunk: (chunk) => {
+      console.log("Stream chunk:", chunk);
+    },
   });
 
   const result2 = stream.toUIMessageStreamResponse({
     sendSources: true,
     sendReasoning: true,
     onFinish: ({ messages, responseMessage }) => {},
+    onError: (error) => {
+      console.log("Stream error:", error);
+      return "error";
+    },
   });
   return result2;
 

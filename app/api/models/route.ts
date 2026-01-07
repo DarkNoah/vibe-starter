@@ -1,8 +1,9 @@
-import providerManager from "@/lib/provider";
+import { getProviderManager } from "@/lib/provider";
 import { Provider, ProviderModel } from "@/types/provider";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
-  const models = await providerManager.getAvailableModels();
+  console.log("get models");
+  const models = await getProviderManager().getAvailableModels();
   return NextResponse.json(models, { status: 200 });
 }

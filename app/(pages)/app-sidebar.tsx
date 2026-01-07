@@ -37,9 +37,6 @@ import { ChatMaxingIconColoured } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { InviteFriend } from "@/components/invites/invite-friend";
-import { OrganizationSwitcher } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
-import { useTheme } from "next-themes";
 import { APP_NAME } from "@/lib/constants";
 
 const data = {
@@ -75,10 +72,6 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { theme } = useTheme();
-  const appearance = {
-    baseTheme: theme === "dark" ? dark : undefined,
-  };
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>

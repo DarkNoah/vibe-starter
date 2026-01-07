@@ -1,4 +1,3 @@
-import providerManager from "@/lib/provider";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -7,8 +6,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const provider = await providerManager.getProvider(id, true);
-    return NextResponse.json(provider, { status: 200 });
+    //const provider = await getProviderManager().getProvider(id, true);
+    return NextResponse.json({}, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
       { error: error?.message ?? "Failed to load provider" },

@@ -9,15 +9,6 @@
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": []
-    },
-    {
-      "label": "convex: dev",
-      "type": "shell",
-      "command": "npx convex dev --no-open",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": []
     }
   ]
 }

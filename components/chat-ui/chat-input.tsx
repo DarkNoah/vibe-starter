@@ -6,8 +6,6 @@ import {
   PromptInputActionMenu,
   PromptInputActionMenuContent,
   PromptInputActionMenuTrigger,
-  PromptInputAttachment,
-  PromptInputAttachments,
   PromptInputBody,
   PromptInputButton,
   PromptInputMessage,
@@ -29,11 +27,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useUser } from "@clerk/nextjs";
-import { useModelsStore, useThreadStore } from "@/store";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { useTheme } from "next-themes";
+import { useModelsStore } from "@/store";
 import { ChatStatus } from "ai";
 import { cn } from "@/lib/utils";
 import {
@@ -42,38 +36,32 @@ import {
 } from "./chat-input-attachment";
 import React from "react";
 
-export interface ChatInputProps {
+export type ChatInputProps = Omit<PromptInputProps, "onSubmit"> & {
   onSubmit: (e: PromptInputMessage, model?: string) => void;
   status: ChatStatus;
   className?: string;
   input?: string;
   setInput?: (input: string) => void;
-}
+  onAbort?: () => void;
+};
 
 export interface ChatInputRef {
   attachmentsClear: () => void;
 }
 
 export const ChatInput = React.forwardRef(
-  (
-    props: ChatInputProps & PromptInputProps,
-    ref: ForwardedRef<ChatInputRef>
-  ) => {
-    const { onSubmit, status, className, input, setInput } = props;
-    const { theme } = useTheme();
-    const { user } = useUser();
+  (props: ChatInputProps, ref: ForwardedRef<ChatInputRef>) => {
+    const { onSubmit, status, className, input, setInput, onAbort } = props;
     const attachmentRef = useRef<ChatInputAttachmentRef>(null);
 
     //const [models, setModels] = useState<{ name: string; value: string }[]>([]);
     const [model, setModel] = useState<string | undefined>(undefined);
-    const { models, isLoading } = useModelsStore();
+    const { models } = useModelsStore();
     const [webSearch, setWebSearch] = useState(false);
-    const [agentId, setAgentId] = useState<string | undefined>(undefined);
-    const [loading, setLoading] = useState(false);
     const [useMicrophone, setUseMicrophone] = useState<boolean>(false);
 
     useEffect(() => {
-      if (!model && models.length > 0) {
+      if (!model && models && models.length > 0) {
         setModel(models[0].id);
       }
     }, [models]);
@@ -83,6 +71,12 @@ export const ChatInput = React.forwardRef(
         attachmentRef.current?.clear();
       },
     }));
+
+    const handleSubmit = () => {
+      if (status == "streaming") {
+        onAbort?.();
+      }
+    };
     return (
       <PromptInput
         onSubmit={(e) => onSubmit(e, model)}
@@ -133,7 +127,7 @@ export const ChatInput = React.forwardRef(
                 <PromptInputModelSelectValue />
               </PromptInputModelSelectTrigger>
               <PromptInputModelSelectContent>
-                {models.map((model) => (
+                {models?.map((model) => (
                   <PromptInputModelSelectItem key={model.id} value={model.id}>
                     {model.name}
                   </PromptInputModelSelectItem>
@@ -141,7 +135,11 @@ export const ChatInput = React.forwardRef(
               </PromptInputModelSelectContent>
             </PromptInputModelSelect>
           </PromptInputTools>
-          <PromptInputSubmit disabled={!input && !status} status={status} />
+          <PromptInputSubmit
+            disabled={!input && !status}
+            status={status}
+            onClick={handleSubmit}
+          />
         </PromptInputToolbar>
       </PromptInput>
     );

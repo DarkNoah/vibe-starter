@@ -7,11 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import React from "react";
 import { cn } from "@/lib/utils";
 
-import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
-import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
-
-import { dark } from "@clerk/themes";
-import { useTheme } from "next-themes";
+import { signOut, useSession } from "next-auth/react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useTranslation } from "react-i18next";
 import { APP_NAME } from "@/lib/constants";
@@ -29,13 +25,9 @@ const useMenuItems = () => {
 export const HeroHeader = () => {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
-  const { theme } = useTheme();
+  const { status } = useSession();
   const { t } = useTranslation();
   const menuItems = useMenuItems();
-
-  const appearance = {
-    baseTheme: theme === "dark" ? dark : undefined,
-  };
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -115,61 +107,40 @@ export const HeroHeader = () => {
                 </ul>
               </div>
               <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
-                <AuthLoading>
+                {status === "loading" && (
                   <div className="flex items-center justify-center">
                     <Loader2 className="size-8 p-2 animate-spin" />
                   </div>
-                </AuthLoading>
-                <Authenticated>
-                  <Button asChild size="sm">
-                    {/* <Link href="/dashboard">
-                      <span>{t("dashboard")}</span>
-                    </Link> */}
-                    <Link href="/threads">
-                      <span>{t("New Chat")}</span>
-                    </Link>
-                  </Button>
-                  <LanguageToggle />
-                  <UserButton appearance={appearance} />
-                </Authenticated>
+                )}
+                {status === "authenticated" && (
+                  <>
+                    <Button asChild size="sm">
+                      {/* <Link href="/dashboard">
+                        <span>{t("dashboard")}</span>
+                      </Link> */}
+                      <Link href="/threads">
+                        <span>{t("New Chat")}</span>
+                      </Link>
+                    </Button>
+                    <LanguageToggle />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                    >
+                      {t("logout", "Logout")}
+                    </Button>
+                  </>
+                )}
 
-                <Unauthenticated>
-                  <LanguageToggle />
-                  <SignInButton mode="modal">
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      // className={cn(isScrolled && "lg:hidden")}
-                    >
-                      <Link href="#">
-                        <span>{t("login", "Login")}</span>
-                      </Link>
+                {status === "unauthenticated" && (
+                  <>
+                    <LanguageToggle />
+                    <Button asChild variant="outline" size="sm">
+                      <Link href="/sign-in">{t("login", "Login")}</Link>
                     </Button>
-                  </SignInButton>
-                  {/* <SignUpButton mode="modal">
-                    <Button
-                      asChild
-                      size="sm"
-                      className={cn(isScrolled && "lg:hidden")}
-                    >
-                      <Link href="#">
-                        <span>{t("signUp", "Sign Up")}</span>
-                      </Link>
-                    </Button>
-                  </SignUpButton> */}
-                  {/* <SignUpButton mode="modal">
-                    <Button
-                      asChild
-                      size="sm"
-                      className={cn(isScrolled ? "lg:inline-flex" : "hidden")}
-                    >
-                      <Link href="#">
-                        <span>{t("getStarted", "Get Started")}</span>
-                      </Link>
-                    </Button>
-                  </SignUpButton> */}
-                </Unauthenticated>
+                  </>
+                )}
               </div>
             </div>
           </div>

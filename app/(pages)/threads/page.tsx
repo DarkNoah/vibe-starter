@@ -51,7 +51,7 @@ import { CopyIcon, GlobeIcon } from "lucide-react";
 import { Loader } from "@/components/ai-elements/loader";
 import { useRouter } from "next/navigation";
 import emitter from "@/lib/events/event-bus";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { useModelsStore, useThreadStore } from "@/store";
 import { toast } from "sonner";
 import { ChatInput } from "@/components/chat-ui/chat-input";
@@ -60,9 +60,9 @@ export default function Page() {
   const [input, setInput] = useState<string | undefined>(undefined);
   const router = useRouter();
   const [files, setFiles] = useState<FileList | undefined>(undefined);
-  const [model, setModel] = useState<string | undefined>(undefined);
+  // const [model, setModel] = useState<string | undefined>(undefined);
   const [webSearch, setWebSearch] = useState(false);
-  const { isSignedIn, user, isLoaded } = useUser();
+  const { data: session } = useSession();
   // const [models, setModels] = useState<{ name: string; value: string }[]>([]);
   const setCreateThread = useThreadStore((s) => s.dispatch);
   const { models, isLoading, error } = useModelsStore();
@@ -72,7 +72,7 @@ export default function Page() {
     }),
   });
 
-  const handleSubmit = async (message: PromptInputMessage) => {
+  const handleSubmit = async (message: PromptInputMessage, model?: string) => {
     const hasText = Boolean(message.text);
     const hasAttachments = Boolean(message.files?.length);
 
@@ -138,23 +138,19 @@ export default function Page() {
     );
   }
 
-  useEffect(() => {
-    if (!model && models.length > 0) {
-      setModel(models[0].id);
-    }
-  }, [models]);
   return (
     <div className="flex h-[calc(100vh-440px)] max-h-[800px] min-h-[600px] w-full flex-1 flex-col items-center justify-center px-5">
       <div className="mx-auto mt-10 mb-6 max-w-screen-lg px-4 text-center sm:mt-16 sm:mb-8 md:mt-20 md:mb-10">
-        {user && (
+        {session?.user && (
           <h1 className="text-[36px] font-medium md:text-[48px] animate-in fade-in-0 duration-300">
-            Hello, {user?.fullName}
+            Hello, {session.user.name}
           </h1>
         )}
         <h2 className="mx-auto max-w-[300px] px-2 text-[14px] sm:max-w-none">
           Bring your weirdest, wildest, or most wonderful ideas to life with AI.
         </h2>
       </div>
+      <div className="ml-4 hidden"></div>
       <ChatInput
         onSubmit={handleSubmit}
         status={status}

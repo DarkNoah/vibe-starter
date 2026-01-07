@@ -4,7 +4,6 @@ import Testimonials from "./testimonials";
 import CallToAction from "./call-to-action";
 import FAQs from "./faqs";
 import Footer from "./footer";
-import CustomClerkPricing from "@/components/custom-clerk-pricing";
 
 export default function Home() {
   return (
@@ -23,7 +22,9 @@ export default function Home() {
               innovate.
             </p>
           </div>
-          <CustomClerkPricing />
+          <div className="text-center text-muted-foreground">
+            Pricing will be available after authentication is configured.
+          </div>
         </div>
       </section>
       <Testimonials />

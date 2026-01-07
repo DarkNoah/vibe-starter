@@ -1,18 +1,19 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import NextAuth from "next-auth";
+import authConfig from "./auth.config";
 
-const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"]);
-const isAdminRoute = createRouteMatcher(["/admin(.*)", "/api/admin(.*)"]);
+const isProtectedRoute = (pathname: string) =>
+  pathname.startsWith("/dashboard");
 
-export default clerkMiddleware(async (auth, req) => {
-  const _auth = await auth();
-  const metadata: Record<string, any> = (_auth.sessionClaims?.metadata ||
-    {}) as Record<string, any>;
-  if (isAdminRoute(req) && metadata.role !== "admin") {
-    const url = new URL("/", req.url);
-    return NextResponse.redirect(url);
+const { auth } = NextAuth(authConfig);
+
+export default auth((req) => {
+  if (isProtectedRoute(req.nextUrl.pathname) && !req.auth) {
+    const signInUrl = new URL("/api/auth/signin", req.nextUrl.origin);
+    signInUrl.searchParams.set("callbackUrl", req.nextUrl.href);
+    return NextResponse.redirect(signInUrl);
   }
-  if (isProtectedRoute(req)) await auth.protect();
+  return NextResponse.next();
 });
 
 export const config = {

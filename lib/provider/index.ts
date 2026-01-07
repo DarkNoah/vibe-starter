@@ -1,6 +1,3 @@
-import { Id } from "@/convex/_generated/dataModel";
-import { api } from "@/convex/_generated/api";
-import { get } from "@/convex/providers";
 import { createGateway, gateway } from "ai";
 import { Provider, ProviderModel } from "@/types/provider";
 import { OpenAI } from "openai";
@@ -11,7 +8,7 @@ import { createDeepSeek } from "@ai-sdk/deepseek";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { ProviderV2, LanguageModelV2 } from "@ai-sdk/provider";
-import { convexClient } from "../convex/client";
+import { loadProvidersFromEnv } from "./config";
 
 export class ProviderManager {
   public providers: Record<string, any>;
@@ -22,35 +19,28 @@ export class ProviderManager {
   }
 
   async init() {
-    let providers = this.providers;
-    if (providers === undefined) {
-      providers = {};
-    }
-    const res = await convexClient.query(api.providers.list, {});
-    res.forEach((x) => {
-      providers[x._id] = x;
+    const nextProviders = loadProvidersFromEnv();
+    const map: Record<string, Provider> = {};
+    nextProviders.forEach((provider) => {
+      map[provider.id] = provider;
     });
-    this.providers = providers;
+    this.providers = map;
   }
 
   async getAvailableModels(): Promise<{ id: string; name: string }[]> {
-    let providers = [];
+    let providers: Provider[] = [];
     if (Object.keys(this.providers).length > 0) {
       providers = Object.values(this.providers).filter((x) => x.isActive);
     } else {
-      providers = await convexClient.query(api.providers.list, {
-        isActive: true,
-      });
-      providers.forEach((x) => {
-        this.providers[x._id] = x;
-      });
+      await this.init();
+      providers = Object.values(this.providers).filter((x) => x.isActive);
     }
     const models: { id: string; name: string }[] = [];
     providers.forEach((x) => {
       x.models
         .filter((y: any) => y.isActive)
         .forEach((y: any) => {
-          models.push({ id: y.id + "@" + x._id, name: y.name });
+          models.push({ id: `${y.id}@${x.id}`, name: y.name });
         });
     });
     return models;
@@ -97,6 +87,7 @@ export class ProviderManager {
   async getLanguageModel(
     modelId: string
   ): Promise<LanguageModelV2 | undefined> {
+    if (!modelId.includes("@")) return undefined;
     const providerId = modelId.split("@")[1];
     const languageModelId = modelId.split("@")[0];
     const provider = await this.getProviderV2(providerId);
@@ -200,17 +191,22 @@ export class ProviderManager {
     providerId: string,
     refresh: boolean = false
   ): Promise<any> => {
-    if (this.providers[providerId] && !refresh) {
-      return this.providers[providerId];
+    if (refresh || !this.providers[providerId]) {
+      await this.init();
     }
-    const res = await convexClient.query(api.providers.get, {
-      id: providerId as Id<"providers">,
-    });
-    this.providers[providerId] = res;
-    return res;
+    return this.providers[providerId] ?? null;
   };
 }
 
-const providerManager = new ProviderManager();
+// const providerManager = new ProviderManager();
 
-export default providerManager;
+// export default providerManager;
+
+let providerManager: ProviderManager | null = null;
+
+export const getProviderManager = () => {
+  if (!providerManager) {
+    providerManager = new ProviderManager();
+  }
+  return providerManager;
+};

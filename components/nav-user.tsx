@@ -1,130 +1,75 @@
 "use client";
 
-import { IconDotsVertical, IconLogout } from "@tabler/icons-react";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
 import {
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/sidebar";
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-import {
-  OrganizationList,
-  OrganizationSwitcher,
-  SignedOut,
-  SignInButton,
-  SignOutButton,
-  useClerk,
-  UserButton,
-  useUser,
-} from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
-import { useTheme } from "next-themes";
-import router from "next/router";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 
+function getInitials(name?: string | null) {
+  if (!name) return "U";
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 export function NavUser() {
   const { t } = useTranslation();
-  const { isMobile } = useSidebar();
-  const { openUserProfile, signOut, openOrganizationProfile } = useClerk();
-  const { theme } = useTheme();
-  const { user: clerkUser } = useUser();
+  const { data: session, status } = useSession();
 
-  const appearance = {
-    baseTheme: theme === "dark" ? dark : undefined,
-  };
-  const onLogout = () => {
-    signOut();
-    router.push("/");
-  };
+  if (status === "loading") {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <div className="text-sm text-muted-foreground">
+            {t("loading", "Loading")}
+          </div>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
+
+  if (!session?.user) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <Button asChild size="sm" variant="outline">
+            <Link href="/sign-in">{t("login", "Login")}</Link>
+          </Button>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
-          <div className="flex flex-row items-center gap-2">
-            <UserButton appearance={appearance}></UserButton>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">
-                {clerkUser?.fullName}
-              </span>
-              <span className="text-muted-foreground truncate text-xs">
-                {clerkUser?.primaryEmailAddress?.emailAddress}
-              </span>
-            </div>
+        <div className="flex items-center gap-3">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={session.user.image || ""} alt={session.user.name || ""} />
+            <AvatarFallback>{getInitials(session.user.name)}</AvatarFallback>
+          </Avatar>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-medium">{session.user.name}</span>
+            <span className="text-muted-foreground truncate text-xs">
+              {session.user.email}
+            </span>
           </div>
-
-          {/* <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarImage
-                  src={clerkUser?.imageUrl || ""}
-                  alt={clerkUser?.fullName || ""}
-                />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">
-                  {clerkUser?.fullName}
-                </span>
-                <span className="text-muted-foreground truncate text-xs">
-                  {clerkUser?.primaryEmailAddress?.emailAddress}
-                </span>
-              </div>
-              <IconDotsVertical className="ml-auto size-4" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            side="bottom"
-            align="end"
-            sideOffset={8}
-            style={{
-              width: "calc(var(--sidebar-width)-2rem)",
-            }}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => signOut({ callbackUrl: "/" })}
           >
-            <DropdownMenuItem onClick={() => openUserProfile({ appearance })}>
-              <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarImage
-                  src={clerkUser?.imageUrl || ""}
-                  alt={clerkUser?.fullName || ""}
-                />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">
-                  {clerkUser?.fullName}
-                </span>
-                <span className="text-muted-foreground truncate text-xs">
-                  {clerkUser?.primaryEmailAddress?.emailAddress}
-                </span>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={() => onLogout()}
-              className="cursor-pointer"
-            >
-              <SignOutButton></SignOutButton>
-            </DropdownMenuItem>
-          </DropdownMenuContent> */}
-        </DropdownMenu>
+            {t("logout", "Logout")}
+          </Button>
+        </div>
       </SidebarMenuItem>
     </SidebarMenu>
   );

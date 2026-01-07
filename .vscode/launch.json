@@ -39,21 +39,6 @@
       "restart": true
     },
     {
-      "type": "node",
-      "request": "launch",
-      "name": "Convex: dev (server)",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["convex", "dev", "--no-open"],
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "NODE_OPTIONS": "--inspect=9230"
-      },
-
-      "console": "integratedTerminal",
-      "autoAttachChildProcesses": true,
-      "restart": true
-    },
-    {
       "name": "Chrome: attach to Next.js",
       "type": "chrome",
       "request": "launch",

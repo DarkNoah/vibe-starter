@@ -1,33 +1,10 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { IconCaretUpFilled, IconCopyPlus } from "@tabler/icons-react";
 import { FC, Fragment, use, useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, UIDataTypes, UIMessagePart, UITools } from "ai";
+import { DefaultChatTransport } from "ai";
 import Image from "next/image";
 import {
-  PromptInput,
-  PromptInputActionAddAttachments,
-  PromptInputActionMenu,
-  PromptInputActionMenuContent,
-  PromptInputActionMenuTrigger,
-  PromptInputAttachment,
-  PromptInputAttachments,
-  PromptInputBody,
-  PromptInputButton,
   type PromptInputMessage,
-  PromptInputModelSelect,
-  PromptInputModelSelectContent,
-  PromptInputModelSelectItem,
-  PromptInputModelSelectTrigger,
-  PromptInputModelSelectValue,
-  PromptInputSubmit,
-  PromptInputTextarea,
-  PromptInputToolbar,
-  PromptInputTools,
-  usePromptInputAttachments,
 } from "@/components/ai-elements/prompt-input";
 
 import {
@@ -49,22 +26,14 @@ import {
 } from "@/components/ai-elements/reasoning";
 import { Action, Actions } from "@/components/ai-elements/actions";
 import { Response } from "@/components/ai-elements/response";
-import { AlertCircleIcon, CopyIcon, GlobeIcon, MicIcon } from "lucide-react";
+import { AlertCircleIcon, CopyIcon } from "lucide-react";
 import { Loader } from "@/components/ai-elements/loader";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useTheme } from "next-themes";
-import { api } from "@/convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
-import { useUser } from "@clerk/nextjs";
 import AgentSelecter from "@/lib/mastra/components/agent-selecter";
-import { useModelsStore, useThreadStore } from "@/store";
+import { useThreadStore } from "@/store";
 import { ChatInput, ChatInputRef } from "@/components/chat-ui/chat-input";
+import { toast } from "sonner";
 
 interface ThreadPageProps {
   params: Promise<{ id: string }>;
@@ -77,21 +46,15 @@ const ThreadPage: FC<ThreadPageProps> = ({
 }) => {
   const { id } = use(params);
   const [input, setInput] = useState("");
-  const { theme } = useTheme();
-  const { user } = useUser();
   const createThread = useThreadStore((s) => s.createThread);
   const chatInputRef = useRef<ChatInputRef>(null);
   //const [models, setModels] = useState<{ name: string; value: string }[]>([]);
-  const [model, setModel] = useState<string | undefined>(undefined);
-  const { models, isLoading } = useModelsStore();
+  // const [model, setModel] = useState<string | undefined>(undefined);
   const [webSearch, setWebSearch] = useState(false);
   const [agentId, setAgentId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
-  const generateUploadUrl = useMutation(api.uploads.generateUploadUrl);
-  const getFileUrl = useMutation(api.uploads.getFileUrl);
-  const [useMicrophone, setUseMicrophone] = useState<boolean>(false);
 
-  const { messages, setMessages, sendMessage, status, error } = useChat({
+  const { messages, setMessages, sendMessage, status, error, stop } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
       prepareSendMessagesRequest: (data) => {
@@ -107,32 +70,19 @@ const ThreadPage: FC<ThreadPageProps> = ({
     }),
   });
 
-  const handleSubmit = async (message: PromptInputMessage, _model?: string) => {
+  const handleSubmit = async (message: PromptInputMessage, model?: string) => {
     const hasText = Boolean(message.text);
     const hasAttachments = Boolean(message.files?.length);
 
     if (!(hasText || hasAttachments)) {
       return;
     }
-
-    for (const file of message.files || []) {
-      const postUrl = await generateUploadUrl();
-      const response = await fetch(file.url);
-      const blob = await response.blob();
-      const uploadfile = new File([blob], file.filename as string, {
-        type: file.mediaType || "application/octet-stream",
-      });
-      const result = await fetch(postUrl, {
-        method: "POST",
-        headers: { "Content-Type": file.mediaType },
-        body: uploadfile,
-      });
-      const data = await result.json();
-      const storageId = data.storageId as string;
-
-      const fileUrl = await getFileUrl({ storageId: storageId });
-      file.url = fileUrl as string;
+    if (!model) {
+      toast.error("Please select a model");
+      return;
     }
+
+    // Convex uploads removed; keep attachment URLs as-is (data/blob URLs).
 
     sendMessage(
       {
@@ -141,7 +91,7 @@ const ThreadPage: FC<ThreadPageProps> = ({
       },
       {
         body: {
-          model: _model || model,
+          model: model,
           webSearch: webSearch,
           threadId: id,
           agentId: agentId,
@@ -152,29 +102,10 @@ const ThreadPage: FC<ThreadPageProps> = ({
     chatInputRef.current?.attachmentsClear();
   };
 
-  async function convertFilesToDataURLs(files: FileList) {
-    return Promise.all(
-      Array.from(files).map(
-        (file) =>
-          new Promise<{
-            type: "file";
-            mediaType: string;
-            url: string;
-          }>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-              resolve({
-                type: "file",
-                mediaType: file.type,
-                url: reader.result as string,
-              });
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          })
-      )
-    );
-  }
+  const handleAbort = () => {
+    console.log("handleAbort");
+    stop();
+  };
 
   useEffect(() => {
     const fetchThread = async () => {
@@ -185,22 +116,12 @@ const ThreadPage: FC<ThreadPageProps> = ({
       setMessages(thread.messages);
       setLoading(false);
       if (createThread && createThread.threadId == id) {
-        if (createThread.model) setModel(createThread.model);
         handleSubmit(createThread.message, createThread.model);
       }
     };
 
     fetchThread();
   }, []);
-
-  useEffect(() => {
-    if (!model && models.length > 0) {
-      setModel(models[0].id);
-      if (createThread && createThread.threadId == id && createThread.model) {
-        setModel(createThread.model);
-      }
-    }
-  }, [models]);
 
   return (
     <div className="flex h-[calc(100vh-var(--header-height)-(var(--spacing)*8))] w-full flex-col items-center justify-center px-5">
@@ -320,6 +241,7 @@ const ThreadPage: FC<ThreadPageProps> = ({
                           message.id === messages.at(-1)?.id
                         }
                       >
+                        {part.state}
                         <ReasoningTrigger />
                         <ReasoningContent>{part.text}</ReasoningContent>
                       </Reasoning>
@@ -352,7 +274,8 @@ const ThreadPage: FC<ThreadPageProps> = ({
       </div>
       <ChatInput
         ref={chatInputRef}
-        onSubmit={(e) => handleSubmit(e, model)}
+        onSubmit={(e, model) => handleSubmit(e, model)}
+        onAbort={handleAbort}
         status={status}
         className="flex flex-col relative"
         globalDrop
