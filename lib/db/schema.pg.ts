@@ -14,6 +14,17 @@ export const users = pgTable("user", {
   image: text("image"),
 });
 
+export const userBilling = pgTable("user_billing", {
+  userId: text("userId")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  stripeCustomerId: text("stripeCustomerId").unique(),
+  stripeSubscriptionId: text("stripeSubscriptionId"),
+  stripePriceId: text("stripePriceId"),
+  stripeSubscriptionStatus: text("stripeSubscriptionStatus"),
+  stripeCurrentPeriodEnd: timestamp("stripeCurrentPeriodEnd", { mode: "date" }),
+});
+
 export const accounts = pgTable(
   "account",
   {

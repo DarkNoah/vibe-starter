@@ -13,6 +13,17 @@ export const users = sqliteTable("user", {
   image: text("image"),
 });
 
+export const userBilling = sqliteTable("user_billing", {
+  userId: text("userId")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  stripeCustomerId: text("stripeCustomerId").unique(),
+  stripeSubscriptionId: text("stripeSubscriptionId"),
+  stripePriceId: text("stripePriceId"),
+  stripeSubscriptionStatus: text("stripeSubscriptionStatus"),
+  stripeCurrentPeriodEnd: integer("stripeCurrentPeriodEnd", { mode: "timestamp" }),
+});
+
 export const accounts = sqliteTable(
   "account",
   {

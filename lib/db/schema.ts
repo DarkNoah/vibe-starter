@@ -13,3 +13,4 @@ export const users = schema.users;
 export const accounts = schema.accounts;
 export const sessions = schema.sessions;
 export const verificationTokens = schema.verificationTokens;
+export const userBilling = schema.userBilling;

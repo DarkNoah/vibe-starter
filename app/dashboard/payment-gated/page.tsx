@@ -1,5 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { getUserBillingStatus, isSubscriptionActive } from "@/lib/billing";
+import { UpgradeButton } from "@/components/billing/upgrade-button";
+import { ManageBillingButton } from "@/components/billing/manage-billing-button";
 
 function UpgradeCard() {
   return (
@@ -11,7 +14,10 @@ function UpgradeCard() {
         <p>This page is available on paid plans. Choose a plan that fits your needs.</p>
       </div>
       <div className="px-8 lg:px-12 text-center text-muted-foreground">
-        Billing integration is not configured yet.
+        Unlock paid features with Stripe Checkout.
+      </div>
+      <div className="flex justify-center">
+        <UpgradeButton />
       </div>
     </>
   );
@@ -23,6 +29,7 @@ function FeaturesCard() {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Advanced features</h1>
+          <ManageBillingButton />
         </div>
         <div className="rounded-lg border bg-card p-6">
           <h2 className="mb-4 text-lg font-semibold">Page with advanced features</h2>
@@ -39,10 +46,12 @@ export default async function TeamPage() {
     redirect("/api/auth/signin?callbackUrl=/dashboard/payment-gated");
   }
 
+  const billing = await getUserBillingStatus(session.user.id);
+  const hasAccess = isSubscriptionActive(billing?.stripeSubscriptionStatus);
+
   return (
     <>
-      <UpgradeCard />
-      <FeaturesCard />
+      {hasAccess ? <FeaturesCard /> : <UpgradeCard />}
     </>
   );
 }

@@ -11,6 +11,23 @@ import { signOut, useSession } from "next-auth/react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useTranslation } from "react-i18next";
 import { APP_NAME } from "@/lib/constants";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+function getInitials(name?: string | null) {
+  if (!name) return "U";
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 const useMenuItems = () => {
   const { t } = useTranslation();
@@ -25,7 +42,7 @@ const useMenuItems = () => {
 export const HeroHeader = () => {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const { t } = useTranslation();
   const menuItems = useMenuItems();
 
@@ -123,13 +140,33 @@ export const HeroHeader = () => {
                       </Link>
                     </Button>
                     <LanguageToggle />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => signOut({ callbackUrl: "/" })}
-                    >
-                      {t("logout", "Logout")}
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-full"
+                          aria-label={t("user_menu", "User menu")}
+                        >
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage
+                              src={session?.user?.image || ""}
+                              alt={session?.user?.name || ""}
+                            />
+                            <AvatarFallback>
+                              {getInitials(session?.user?.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => signOut({ callbackUrl: "/" })}
+                        >
+                          {t("logout", "Logout")}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </>
                 )}
 
