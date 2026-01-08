@@ -13,11 +13,10 @@ import { useTranslation } from "react-i18next";
 import { APP_NAME } from "@/lib/constants";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 function getInitials(name?: string | null) {
   if (!name) return "U";
@@ -140,8 +139,8 @@ export const HeroHeader = () => {
                       </Link>
                     </Button>
                     <LanguageToggle />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                    <Popover>
+                      <PopoverTrigger asChild>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -158,15 +157,16 @@ export const HeroHeader = () => {
                             </AvatarFallback>
                           </Avatar>
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
+                      </PopoverTrigger>
+                      <PopoverContent align="end" className="w-40 p-1">
+                        <button
+                          className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground w-full cursor-pointer rounded-sm px-2 py-1.5 text-left text-sm outline-hidden"
                           onClick={() => signOut({ callbackUrl: "/" })}
                         >
                           {t("logout", "Logout")}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                        </button>
+                      </PopoverContent>
+                    </Popover>
                   </>
                 )}
 
